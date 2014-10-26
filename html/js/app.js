@@ -8,6 +8,16 @@ INTERSECTED, SELECTED;
 
 init();
 animate();
+playSounds();
+
+
+function playSounds() {
+	var audio = document.getElementById('bg_music');
+	audio.volume = 0.0;
+	audio.play();
+	audio.loop = true;
+	$("#bg_music").animate({volume: 0.9}, 20000);
+}
 
 function init() {
 
@@ -80,6 +90,9 @@ function init() {
 	
 	// add text
 	//initText();
+	
+	// Add Header
+	createHeaderElement();
 
 	plane = new THREE.Mesh( new THREE.PlaneGeometry( 2000, 2000, 8, 8 ), new THREE.MeshBasicMaterial( { color: 0x000000, opacity: 0.25, transparent: true, wireframe: true } ) );
 	plane.visible = false;
@@ -104,6 +117,16 @@ function init() {
 
 	window.addEventListener( 'resize', onWindowResize, false );
 
+}
+
+function createHeaderElement() {
+	var info = document.createElement( 'div' );
+	info.style.position = 'absolute';
+	info.style.top = '10px';
+	info.style.width = '100%';
+	info.style.textAlign = 'center';
+	info.innerHTML = 'Site under construction... Feel free to interact with my sandbox.';
+	container.appendChild( info );
 }
 
 function initText() {
@@ -244,7 +267,7 @@ function animate() {
 function render() {
 
 	controls.update();
-
+	camera.position.x+=0.5;
 	renderer.render( scene, camera );
 
 }

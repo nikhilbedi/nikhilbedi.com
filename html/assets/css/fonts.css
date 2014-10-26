@@ -1,0 +1,13 @@
+@font-face {
+    font-family: Colaborate-Thin;
+    src: url('../fonts/Colaborate/colaborate_thin.eot?#iefix') format('embedded-opentype'),
+         url('../fonts/Colaborate/colaborate_thin.otf')  format('opentype'),
+         url('../fonts/Colaborate/colaborate_thin.woff') format('woff'),
+         url('../fonts/Colaborate/colaborate_thin/Colaborate-Thin.ttf')  format('truetype'),
+         url('../fonts/Colaborate/colaborate_thin.svg#Colaborate-Thin') format('svg');
+}
+
+html {
+	color: #a3a1a0;
+	font: bold 1.5em Colaborate-Thin, Helvetica, Arial, Geneva, sans-serif;
+}
