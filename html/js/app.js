@@ -6,6 +6,12 @@ var mouse = new THREE.Vector2(),
 offset = new THREE.Vector3(),
 INTERSECTED, SELECTED;
 
+var clock = new THREE.Clock();
+
+var radius = 6371;
+			var tilt = 0.41;
+			var rotationSpeed = 0.02;
+
 init();
 animate();
 playSounds();
@@ -14,7 +20,7 @@ playSounds();
 function playSounds() {
 	var audio = document.getElementById('bg_music');
 	audio.volume = 0.0;
-	audio.play();
+	//audio.play();
 	audio.loop = true;
 	$("#bg_music").animate({volume: 0.9}, 20000);
 }
@@ -27,6 +33,13 @@ function init() {
 	camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 10000 );
 	camera.position.z = 1000;
 
+	controls = new THREE.FlyControls( camera );
+	controls.movementSpeed = 100;
+	controls.domElement = container;
+	controls.rollSpeed = Math.PI / 24;
+	controls.autoForward = false;
+	controls.dragToLook = false;
+	/*
 	controls = new THREE.TrackballControls( camera );
 	controls.rotateSpeed = 1.0;
 	controls.zoomSpeed = 1.2;
@@ -35,7 +48,7 @@ function init() {
 	controls.noPan = false;
 	controls.staticMoving = true;
 	controls.dynamicDampingFactor = 0.3;
-
+*/
 	scene = new THREE.Scene();
 
 	scene.add( new THREE.AmbientLight( 0x505050 ) );
@@ -93,6 +106,8 @@ function init() {
 	
 	// Add Header
 	createHeaderElement();
+	// Add Menu
+	createTableOfContentsElement();
 
 	plane = new THREE.Mesh( new THREE.PlaneGeometry( 2000, 2000, 8, 8 ), new THREE.MeshBasicMaterial( { color: 0x000000, opacity: 0.25, transparent: true, wireframe: true } ) );
 	plane.visible = false;
@@ -127,6 +142,38 @@ function createHeaderElement() {
 	info.style.textAlign = 'center';
 	info.innerHTML = 'Site under construction... Feel free to interact with my sandbox.';
 	container.appendChild( info );
+}
+
+function createSoundElement() {
+
+}
+
+function createTableOfContentsElement() {
+	var menu = document.createElement( 'div' );
+	var table_of_contents = document.createElement( 'ul' );
+	
+	// Actual contents of table of contents
+	var item1 = document.createElement ( 'li' );
+	item1.innerHTML = "About Me";
+	var item2 = document.createElement ( 'li' );
+	item2.innerHTML = "Projects";
+	var item3 = document.createElement ( 'li' );
+	item3.innerHTML = "Games";
+	
+	// Append the created items to our 'ul'
+	table_of_contents.appendChild(item1);
+	table_of_contents.appendChild(item2);
+	table_of_contents.appendChild(item3);
+	
+	// Set up the menu div with some properties
+	menu.style.position = 'absolute';
+	menu.style.top = '10px';
+	menu.style.width = '10%';
+	menu.style.textAlign = 'left';
+	menu.appendChild(table_of_contents);
+	
+	// Put it all back into the dom
+	container.appendChild (menu);
 }
 
 function initText() {
@@ -265,9 +312,9 @@ function animate() {
 }
 
 function render() {
-
-	controls.update();
-	camera.position.x+=0.5;
+	var delta = clock.getDelta();
+	controls.update(delta);
+	//camera.position.x+=0.5;
 	renderer.render( scene, camera );
 
 }
