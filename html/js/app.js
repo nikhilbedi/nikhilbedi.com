@@ -39,16 +39,7 @@ function init() {
 	controls.rollSpeed = Math.PI / 24;
 	controls.autoForward = false;
 	controls.dragToLook = false;
-	/*
-	controls = new THREE.TrackballControls( camera );
-	controls.rotateSpeed = 1.0;
-	controls.zoomSpeed = 1.2;
-	controls.panSpeed = 0.8;
-	controls.noZoom = false;
-	controls.noPan = false;
-	controls.staticMoving = true;
-	controls.dynamicDampingFactor = 0.3;
-*/
+
 	scene = new THREE.Scene();
 
 	scene.add( new THREE.AmbientLight( 0x505050 ) );
@@ -71,12 +62,17 @@ function init() {
 	// Add fog
 	scene.fog = new THREE.FogExp2( 0xe0e0e0, 0.0015 );
 	
-	// Add boxes
-	var geometry = new THREE.BoxGeometry( 40, 40, 40 );
-
+	// Load texture for planes
+	var img = new THREE.MeshBasicMaterial({
+        map:THREE.ImageUtils.loadTexture('../assets/img/testfile.jpg')
+    });
+    img.map.needsUpdate = true; //ADDED
+	
+	// Add planes
+	var geometry = new THREE.PlaneGeometry(5, 20);
 	for ( var i = 0; i < 200; i ++ ) {
 
-		var object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
+		var object = new THREE.Mesh( geometry, img); // new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
 
 		object.material.ambient = object.material.color;
 
@@ -90,7 +86,7 @@ function init() {
 
 		object.scale.x = Math.random() * 2 + 1;
 		object.scale.y = Math.random() * 2 + 1;
-		object.scale.z = Math.random() * 2 + 1;
+		//object.scale.z = 0;//Math.random() * 2 + 1;
 
 		object.castShadow = true;
 		object.receiveShadow = true;
@@ -155,6 +151,9 @@ function createTableOfContentsElement() {
 	// Actual contents of table of contents
 	var item1 = document.createElement ( 'li' );
 	item1.innerHTML = "About Me";
+	$("li").click(function () {
+		alert("Worked!");
+	});
 	var item2 = document.createElement ( 'li' );
 	item2.innerHTML = "Projects";
 	var item3 = document.createElement ( 'li' );
