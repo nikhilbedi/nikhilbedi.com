@@ -43,14 +43,15 @@ function init() {
 	glScene.add( planeMesh );
 	objects.push( planeMesh );
 	
-	var tempElement = document.createElement( 'img' );
+	/*var tempElement = document.createElement( 'img' );
 		tempElement.src = '../assets/img/testfile.jpg';
 	var tempDiv = document.createElement( 'div' );
 	var tempPg = document.createElement( 'p' );
 		var tempText = document.createTextNode( 'Hey! This is a webpage in a 3D environment!' );
 		tempPg.appendChild( tempText );
 	tempDiv.appendChild( tempPg );
-	tempDiv.appendChild( tempElement );	
+	tempDiv.appendChild( tempElement );	*/
+	var tempDiv = loadHtmlFile( '../tests/sample.html' );
 	var cssObject = new THREE.CSS3DObject( tempDiv );
 	cssObject.position = planeMesh.position;
 	cssObject.rotation = planeMesh.rotation;
@@ -105,7 +106,7 @@ function playSounds() {
 
 function initCamera() {
 	camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 10000 );
-	camera.position.z = 10;
+	camera.position.z = 1000;
 }
 
 function initControls( domElement ) {
@@ -194,6 +195,15 @@ function onWindowResize() {
 
 	glRenderer.setSize( window.innerWidth, window.innerHeight );
 	cssRenderer.setSize( window.innerWidth, window.innerHeight );
+}
+
+// returns a dom element
+function loadHtmlFile(filename) {
+	var tempDiv = document.createElement( 'div' );
+	var loadCommand = '<object type="text/html" data="' + filename + '" ></object>';
+	console.log(loadCommand);
+	tempDiv.innerHTML = loadCommand;
+	return tempDiv;
 }
 
 function animate() {
