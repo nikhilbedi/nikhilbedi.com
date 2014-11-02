@@ -1,8 +1,8 @@
 
 // For WebGL content
 var container, stats;
-var camera, controls, scene, projector, glRenderer;
-var objects = [], plane, textGeo;
+var camera, controls, glScene, projector, glRenderer;
+var objects = [], textGeo;
 
 var mouse = new THREE.Vector2(),
 offset = new THREE.Vector3(),
@@ -15,6 +15,13 @@ var radius = 6371;
 var tilt = 0.41;
 var rotationSpeed = 0.02;
 
+// For CSS3D
+var cssRenderer, cssScene;
+
+// For both renderers
+var renderWidth = window.innerWidth;
+var renderHeight = window.innerHeight;
+
 init();
 animate();
 playSounds();
@@ -26,21 +33,28 @@ function init() {
 
 	initCamera();
 	initControls(container);
-	initScene();
+	initGlScene();
+	initCssScene();
 	
-	// Load texture for planes
-	var img = new THREE.MeshBasicMaterial({
-        map:THREE.ImageUtils.loadTexture('../assets/img/testfile.jpg')
-    });
-    img.map.needsUpdate = true; //ADDED
+	// Test CSS and WebGL Plane
+	var material = new THREE.MeshBasicMaterial({ wireframe: true });
+	var geometry = new THREE.PlaneGeometry();
+	var planeMesh= new THREE.Mesh( geometry, material );
+	glScene.add( planeMesh );
+	objects.push( planeMesh );
 	
-	// Add planes
-	var geometry = new THREE.PlaneGeometry(5, 20);
-	var temp = new THREE.Mesh(geometry, img);
-	temp.position = new THREE.Vector3(0,0,0);
-	scene.add( temp );
-	objects.push( temp );
-	
+	var tempElement = document.createElement( 'img' );
+		tempElement.src = '../assets/img/testfile.jpg';
+	var tempDiv = document.createElement( 'div' );
+	var tempPg = document.createElement( 'p' );
+		var tempText = document.createTextNode( 'Hey! This is a webpage in a 3D environment!' );
+		tempPg.appendChild( tempText );
+	tempDiv.appendChild( tempPg );
+	tempDiv.appendChild( tempElement );	
+	var cssObject = new THREE.CSS3DObject( tempDiv );
+	cssObject.position = planeMesh.position;
+	cssObject.rotation = planeMesh.rotation;
+	cssScene.add( cssObject );
 	
 	// Add Header
 	createHeaderElement();
@@ -50,15 +64,32 @@ function init() {
 	projector = new THREE.Projector();
 
 
+	// Initial renderers, and add to the webpage
 	initGlRenderer();
 	container.appendChild( glRenderer.domElement );
+	
+	initCssRenderer();
+	container.appendChild( cssRenderer.domElement );
+	
 	window.addEventListener( 'resize', onWindowResize, false );
+}
+
+function initCssScene() {
+	cssScene = new THREE.Scene();
+	cssScene.add( new THREE.AmbientLight( 0x505050 ) );
+}
+
+function initCssRenderer() {
+	cssRenderer = new THREE.CSS3DRenderer();
+	cssRenderer.setSize( renderWidth, renderHeight );
+	cssRenderer.domElement.style.position = 'absolute';
+	cssRenderer.domElement.style.top = 0;
 }
 
 function initGlRenderer() {
 	glRenderer = new THREE.WebGLRenderer( { antialias: true } );
 	glRenderer.setClearColor( 0xf0f0f0 );
-	glRenderer.setSize( window.innerWidth, window.innerHeight );
+	glRenderer.setSize( renderWidth, renderHeight );
 	glRenderer.sortObjects = false;
 	glRenderer.shadowMapEnabled = true;
 	glRenderer.shadowMapType = THREE.PCFShadowMap;
@@ -89,9 +120,9 @@ function initControls( domElement ) {
 /*
  * This function must be called after initCamera()
  */
-function initScene() {
-	scene = new THREE.Scene();
-	scene.add( new THREE.AmbientLight( 0x505050 ) );
+function initGlScene() {
+	glScene = new THREE.Scene();
+	glScene.add( new THREE.AmbientLight( 0x505050 ) );
 
 	var light = new THREE.SpotLight( 0xffffff, 1.5 );
 	light.position.set( 0, 500, 2000 );
@@ -107,9 +138,9 @@ function initScene() {
 	light.shadowMapWidth = 2048;
 	light.shadowMapHeight = 2048;
 
-	scene.add( light );
+	glScene.add( light );
 
-	scene.fog = new THREE.FogExp2( 0xe0e0e0, 0.0015 );
+	//glScene.fog = new THREE.FogExp2( 0xe0e0e0, 0.0015 );
 }
 
 function createHeaderElement() {
@@ -157,34 +188,13 @@ function createTableOfContentsElement() {
 	container.appendChild (menu);
 }
 
-function initText() {
-	//var textmaterial = new THREE.MeshFaceMaterial( [ 
-		//			new THREE.MeshPhongMaterial( { color: 0xffffff, shading: THREE.FlatShading } ), // front
-			//		new THREE.MeshPhongMaterial( { color: 0xffffff, shading: THREE.SmoothShading } ) // side
-	textGeo = new THREE.TextGeometry( "Hello World!", {
-
-		size: 700,
-		height: 20,
-		curveSegments: 4,
-
-		font: "helvetiker",
-		weight: "normal",
-		style: "normal",
-
-	});
-	scene.add(textGeo);
-}
-
 function onWindowResize() {
-
 	camera.aspect = window.innerWidth / window.innerHeight;
 	camera.updateProjectionMatrix();
 
 	glRenderer.setSize( window.innerWidth, window.innerHeight );
-
+	cssRenderer.setSize( window.innerWidth, window.innerHeight );
 }
-
-
 
 function animate() {
 	requestAnimationFrame( animate );
@@ -198,6 +208,7 @@ function animate() {
 function render() {
 	
 	//camera.position.x+=0.5;
-	glRenderer.render( scene, camera );
+	glRenderer.render( glScene, camera );
+	cssRenderer.render( cssScene, camera );
 
 }
