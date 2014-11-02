@@ -1,5 +1,7 @@
+
+// For WebGL content
 var container, stats;
-var camera, controls, scene, projector, renderer;
+var camera, controls, scene, projector, glRenderer;
 var objects = [], plane, textGeo;
 
 var mouse = new THREE.Vector2(),
@@ -8,14 +10,58 @@ INTERSECTED, SELECTED;
 
 var clock = new THREE.Clock();
 
+// For Fly Controls
 var radius = 6371;
-			var tilt = 0.41;
-			var rotationSpeed = 0.02;
+var tilt = 0.41;
+var rotationSpeed = 0.02;
 
 init();
 animate();
 playSounds();
 
+
+function init() {
+	container = document.createElement( 'div' );
+	document.body.appendChild( container );
+
+	initCamera();
+	initControls(container);
+	initScene();
+	
+	// Load texture for planes
+	var img = new THREE.MeshBasicMaterial({
+        map:THREE.ImageUtils.loadTexture('../assets/img/testfile.jpg')
+    });
+    img.map.needsUpdate = true; //ADDED
+	
+	// Add planes
+	var geometry = new THREE.PlaneGeometry(5, 20);
+	var temp = new THREE.Mesh(geometry, img);
+	temp.position = new THREE.Vector3(0,0,0);
+	scene.add( temp );
+	objects.push( temp );
+	
+	
+	// Add Header
+	createHeaderElement();
+	// Add Menu
+	createTableOfContentsElement();
+
+	projector = new THREE.Projector();
+
+	glRenderer = new THREE.WebGLRenderer( { antialias: true } );
+	glRenderer.setClearColor( 0xf0f0f0 );
+	glRenderer.setSize( window.innerWidth, window.innerHeight );
+	glRenderer.sortObjects = false;
+
+	glRenderer.shadowMapEnabled = true;
+	glRenderer.shadowMapType = THREE.PCFShadowMap;
+
+	container.appendChild( glRenderer.domElement );
+
+	window.addEventListener( 'resize', onWindowResize, false );
+
+}
 
 function playSounds() {
 	var audio = document.getElementById('bg_music');
@@ -25,23 +71,25 @@ function playSounds() {
 	$("#bg_music").animate({volume: 0.9}, 20000);
 }
 
-function init() {
-
-	container = document.createElement( 'div' );
-	document.body.appendChild( container );
-
+function initCamera() {
 	camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 10000 );
-	camera.position.z = 1000;
+	camera.position.z = 10;
+}
 
+function initControls( domElement ) {
 	controls = new THREE.FlyControls( camera );
 	controls.movementSpeed = 100;
-	controls.domElement = container;
+	controls.domElement = domElement;
 	controls.rollSpeed = Math.PI / 24;
 	controls.autoForward = false;
 	controls.dragToLook = false;
+}
 
+/*
+ * This function must be called after initCamera()
+ */
+function initScene() {
 	scene = new THREE.Scene();
-
 	scene.add( new THREE.AmbientLight( 0x505050 ) );
 
 	var light = new THREE.SpotLight( 0xffffff, 1.5 );
@@ -59,75 +107,8 @@ function init() {
 	light.shadowMapHeight = 2048;
 
 	scene.add( light );
-	// Add fog
+
 	scene.fog = new THREE.FogExp2( 0xe0e0e0, 0.0015 );
-	
-	// Load texture for planes
-	var img = new THREE.MeshBasicMaterial({
-        map:THREE.ImageUtils.loadTexture('../assets/img/testfile.jpg')
-    });
-    img.map.needsUpdate = true; //ADDED
-	
-	// Add planes
-	var geometry = new THREE.PlaneGeometry(5, 20);
-	for ( var i = 0; i < 200; i ++ ) {
-
-		var object = new THREE.Mesh( geometry, img); // new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
-
-		object.material.ambient = object.material.color;
-
-		object.position.x = Math.random() * 1000 - 500;
-		object.position.y = Math.random() * 600 - 300;
-		object.position.z = Math.random() * 800 - 400;
-
-		object.rotation.x = Math.random() * 2 * Math.PI;
-		object.rotation.y = Math.random() * 2 * Math.PI;
-		object.rotation.z = Math.random() * 2 * Math.PI;
-
-		object.scale.x = Math.random() * 2 + 1;
-		object.scale.y = Math.random() * 2 + 1;
-		//object.scale.z = 0;//Math.random() * 2 + 1;
-
-		object.castShadow = true;
-		object.receiveShadow = true;
-
-		scene.add( object );
-
-		objects.push( object );
-
-	}
-	
-	// add text
-	//initText();
-	
-	// Add Header
-	createHeaderElement();
-	// Add Menu
-	createTableOfContentsElement();
-
-	plane = new THREE.Mesh( new THREE.PlaneGeometry( 2000, 2000, 8, 8 ), new THREE.MeshBasicMaterial( { color: 0x000000, opacity: 0.25, transparent: true, wireframe: true } ) );
-	plane.visible = false;
-	scene.add( plane );
-
-	projector = new THREE.Projector();
-
-	renderer = new THREE.WebGLRenderer( { antialias: true } );
-	renderer.setClearColor( 0xf0f0f0 );
-	renderer.setSize( window.innerWidth, window.innerHeight );
-	renderer.sortObjects = false;
-
-	renderer.shadowMapEnabled = true;
-	renderer.shadowMapType = THREE.PCFShadowMap;
-
-	container.appendChild( renderer.domElement );
-
-
-	renderer.domElement.addEventListener( 'mousemove', onDocumentMouseMove, false );
-	renderer.domElement.addEventListener( 'mousedown', onDocumentMouseDown, false );
-	renderer.domElement.addEventListener( 'mouseup', onDocumentMouseUp, false );
-
-	window.addEventListener( 'resize', onWindowResize, false );
-
 }
 
 function createHeaderElement() {
@@ -198,122 +179,24 @@ function onWindowResize() {
 	camera.aspect = window.innerWidth / window.innerHeight;
 	camera.updateProjectionMatrix();
 
-	renderer.setSize( window.innerWidth, window.innerHeight );
+	glRenderer.setSize( window.innerWidth, window.innerHeight );
 
 }
 
-function onDocumentMouseMove( event ) {
 
-	event.preventDefault();
-
-	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-
-	//
-
-	var vector = new THREE.Vector3( mouse.x, mouse.y, 0.5 );
-	projector.unprojectVector( vector, camera );
-
-	var raycaster = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
-
-
-	if ( SELECTED ) {
-	
-		var intersects = raycaster.intersectObject( plane );
-		SELECTED.position.copy( intersects[ 0 ].point.sub( offset ) );
-		return;
-
-	}
-
-
-	var intersects = raycaster.intersectObjects( objects );
-
-	if ( intersects.length > 0 ) {
-
-		if ( INTERSECTED != intersects[ 0 ].object ) {
-
-			if ( INTERSECTED ) INTERSECTED.material.color.setHex( INTERSECTED.currentHex );
-
-			INTERSECTED = intersects[ 0 ].object;
-			INTERSECTED.currentHex = INTERSECTED.material.color.getHex();
-
-			plane.position.copy( INTERSECTED.position );
-			plane.lookAt( camera.position );
-
-		}
-
-		container.style.cursor = 'pointer';
-
-	} else {
-
-		if ( INTERSECTED ) INTERSECTED.material.color.setHex( INTERSECTED.currentHex );
-
-		INTERSECTED = null;
-
-		container.style.cursor = 'auto';
-
-	}
-
-}
-
-function onDocumentMouseDown( event ) {
-
-	event.preventDefault();
-
-	var vector = new THREE.Vector3( mouse.x, mouse.y, 0.5 );
-	projector.unprojectVector( vector, camera );
-
-	var raycaster = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
-
-	var intersects = raycaster.intersectObjects( objects );
-
-	if ( intersects.length > 0 ) {
-
-		controls.enabled = false;
-
-		SELECTED = intersects[ 0 ].object;
-
-		var intersects = raycaster.intersectObject( plane );
-		offset.copy( intersects[ 0 ].point ).sub( plane.position );
-
-		container.style.cursor = 'move';
-	}
-
-}
-
-function onDocumentMouseUp( event ) {
-
-	event.preventDefault();
-
-	controls.enabled = true;
-
-	if ( INTERSECTED ) {
-
-		plane.position.copy( INTERSECTED.position );
-
-		SELECTED = null;
-
-	}
-
-	container.style.cursor = 'auto';
-
-}
-
-//
 
 function animate() {
-
 	requestAnimationFrame( animate );
 
+	var delta = clock.getDelta();
+	controls.update(delta);
+	
 	render();
-
-
 }
 
 function render() {
-	var delta = clock.getDelta();
-	controls.update(delta);
+	
 	//camera.position.x+=0.5;
-	renderer.render( scene, camera );
+	glRenderer.render( scene, camera );
 
 }
